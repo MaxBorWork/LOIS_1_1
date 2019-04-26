@@ -1,4 +1,6 @@
 // author Borisevich M.R. 621702
+// author Shokal I.D. 621701
+
 
 let LEFT_BRACKET = "(";
 let RIGHT_BRACKET = ")";
@@ -8,6 +10,8 @@ let rBracketPattern = new RegExp('\\' + RIGHT_BRACKET, 'g');
 let KONJUNCTION = "&";
 let DISJUNCTION = "|";
 let NEGATION = "!";
+
+let conjNum = 0;
 
 
 function main(){
@@ -21,7 +25,7 @@ function main(){
             document.writeln("<u>Формула не является КНФ</u><br>\n");
         }
     } else {
-        if (checkRightUnaryFormula(formula)) {
+        if (checkSymbols(formula)) {
             document.writeln("<u>Формула является КНФ</u><br>\n");
         } else {
             document.writeln("<u>Формула не является КНФ</u><br>\n");
@@ -29,17 +33,20 @@ function main(){
     }
 }
 
+// author Shokal I.D. 621701
 function removeOuterBrackets(formula) {
     formula = formula.replace(LEFT_BRACKET, "");
     formula = formula.replace(new RegExp('\\' + RIGHT_BRACKET + '$'), '');
     return formula
 }
 
+// author Shokal I.D. 621701
 function checkSymbols(formula) {
     let symbols = /^[A-Z01]+$/;
     return symbols.test(formula)
 }
 
+// author Borisevich M.R. 621702
 function checkBracketsNum(formula) {
     if (formula.includes(LEFT_BRACKET) && formula.includes(RIGHT_BRACKET)) {
         let leftBracketsArr = formula.match(lBracketPattern);
@@ -55,6 +62,7 @@ function checkBracketsNum(formula) {
     return true;
 }
 
+// author Shokal I.D. 621701
 function checkRightUnaryFormula(string) {
     let rightSymbols = string.match(/[A-z01]/g);
     if (rightSymbols === null || rightSymbols.length !== 1) {
@@ -71,6 +79,7 @@ function checkRightUnaryFormula(string) {
     return true;
 }
 
+// author Borisevich M.R. 621702
 function checkRightBinaryFormula(formula) {
     let result = false;
 
@@ -78,13 +87,19 @@ function checkRightBinaryFormula(formula) {
         formula = removeOuterBrackets(formula);
 
         let symbol = KONJUNCTION;
-
-        let disjIndex = getCentralOperationIndex(formula, DISJUNCTION);
-        if (disjIndex < formula.length) {
-            symbol = DISJUNCTION;
+        if (conjNum > 0) {
+            let disjIndex = getCentralOperationIndex(formula, DISJUNCTION);
+            if (disjIndex < formula.length) {
+                symbol = DISJUNCTION;
+            }
         }
-
+        if (symbol === KONJUNCTION) {
+            conjNum++;
+        }
         let operatorIndex = getCentralOperationIndex(formula, symbol);
+        if (operatorIndex >= formula.length) {
+            return false;
+        }
 
         let formulaElements = [];
         formulaElements[0] = formula.slice(0, operatorIndex);
@@ -103,16 +118,23 @@ function checkRightBinaryFormula(formula) {
     return result;
 }
 
+// author Borisevich M.R. 621702
 function getCentralOperationIndex(formula, operator) {
     let openBracketsNum = 0;
-    for (let i = 0; i < formula.length; i++) {
-        if (formula[i] === LEFT_BRACKET) {
-            openBracketsNum++;
-        } else if (formula[i] === RIGHT_BRACKET) {
-            openBracketsNum--;
-        } else if (formula[i] === operator && openBracketsNum === 0) {
-            return i;
+    let i = 0;
+    if (formula.includes(LEFT_BRACKET) && formula.includes(RIGHT_BRACKET)) {
+        while (i < formula.length) {
+            if (formula[i] === LEFT_BRACKET) {
+                openBracketsNum++;
+            } else if (formula[i] === RIGHT_BRACKET) {
+                openBracketsNum--;
+            } else if (formula[i] === operator && openBracketsNum === 0) {
+                break;
+            }
+            i++;
         }
-        i++;
+    } else if (formula.includes(operator)) {
+        return formula.indexOf(operator);
     }
+    return i;
 }
