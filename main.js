@@ -13,7 +13,7 @@ let NEGATION = "!";
 
 let conjNum = 0;
 
-
+// author Borisevich M.R. 621702
 function main(){
     let formula = document.getElementById("formula").value.toString();
     if (formula.includes(KONJUNCTION) && formula.includes(LEFT_BRACKET) && formula.includes(RIGHT_BRACKET) && checkBracketsNum(formula)) {
@@ -24,7 +24,14 @@ function main(){
         } else {
             document.writeln("<u>Формула не является КНФ</u><br>\n");
         }
-    } else {
+    } else if (formula.includes(NEGATION) && formula.includes(LEFT_BRACKET) && formula.includes(RIGHT_BRACKET)) {
+        if (checkRightUnaryFormula(formula))  {
+            document.writeln("<u>Формула является КНФ</u><br>\n");
+        } else {
+            document.writeln("<u>Формула не является КНФ</u><br>\n");
+        }
+    }
+    else {
         if (checkSymbols(formula)) {
             document.writeln("<u>Формула является КНФ</u><br>\n");
         } else {
@@ -42,8 +49,8 @@ function removeOuterBrackets(formula) {
 
 // author Shokal I.D. 621701
 function checkSymbols(formula) {
-    let symbols = /^[A-Z01]+$/;
-    return symbols.test(formula)
+    let symbols = /^[A-Z0]+$/;
+    return symbols.test(formula);
 }
 
 // author Borisevich M.R. 621702
@@ -63,14 +70,17 @@ function checkBracketsNum(formula) {
 }
 
 // author Shokal I.D. 621701
-function checkRightUnaryFormula(string) {
-    let rightSymbols = string.match(/[A-z01]/g);
+function checkRightUnaryFormula(formula) {
+    if (formula.indexOf(LEFT_BRACKET) === 0) {
+        formula = removeOuterBrackets(formula);
+    }
+    let rightSymbols = formula.match(/[A-Z01]/g);
     if (rightSymbols === null || rightSymbols.length !== 1) {
         return false;
     }
-    let symbols = string.match(/[A-z01]|[!|~\->&]/g);
+    let symbols = formula.match(/./g);
     if (symbols !== null) {
-        if (!symbols.includes(NEGATION) && rightSymbols.length !== symbols.length) {
+        if (rightSymbols.length !== (symbols.length-1)) {
             return false;
         }
     } else {
@@ -93,24 +103,28 @@ function checkRightBinaryFormula(formula) {
                 symbol = DISJUNCTION;
             }
         }
-        if (symbol === KONJUNCTION) {
-            conjNum++;
-        }
         let operatorIndex = getCentralOperationIndex(formula, symbol);
         if (operatorIndex >= formula.length) {
             return false;
         }
 
+        if (symbol === KONJUNCTION) {
+            conjNum++;
+        }
+        
         let formulaElements = [];
         formulaElements[0] = formula.slice(0, operatorIndex);
         formulaElements[1] = formula.slice(operatorIndex + 1, formula.length);
 
         for (let i = 0; i < formulaElements.length; i++) {
-            if (result !== checkSymbols(formulaElements[i]) ||
-                            checkRightUnaryFormula(formulaElements[i]) ||
-                            checkRightBinaryFormula(formulaElements[i])) {
+            if (checkSymbols(formulaElements[i])) {
+                result = true;
+            } else if (checkRightUnaryFormula(formulaElements[i])) {
+                result = true;
+            } else if (checkRightBinaryFormula(formulaElements[i])) {
                 result = true;
             } else {
+                result = false;
                 break;
             }
         }
